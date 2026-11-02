@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Nitpad банально</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23C43E1C'/%3E%3Cpath d='M20 46V18l24 28V18' stroke='%23fff' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root{--accent:#C43E1C;--accent-hover:#E85A2A;--accent-light:#FBE5D6;--accent-dark:#9A2F14;--bg-page:#E6E6E6;--bg-panel:#F3F2F1;--bg-white:#fff;--border:#D2D0CE;--border-light:#E0E0E0;--text:#333;--text-muted:#767676;--text-light:#888;--hover-bg:#E1DFDD;--hover-bg-light:#F0EFEE;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Segoe UI',Tahoma,sans-serif;font-size:13px;color:var(--text);background:var(--bg-page);transition:background .25s,color .25s;}
+button{font-family:inherit;cursor:pointer;}
+input,select{font-family:inherit;}
+body.desktop #mobileUI{display:none;}
+body.mobile #desktopUI{display:none;}
+
+/* Welcome */
+#welcome{position:fixed;inset:0;z-index:100000;background:linear-gradient(135deg,var(--accent-dark) 0%,var(--accent) 50%,var(--accent-hover) 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:20px;text-align:center;transition:opacity .4s,visibility .4s,background .25s;overflow-y:auto;}
+#welcome.hide{opacity:0;visibility:hidden;pointer-events:none;}
+.welcome-logo{font-size:44px;font-weight:400;line-height:1;margin-bottom:40px;color:#fff;}
+.welcome-title{font-size:18px;font-weight:500;margin-bottom:24px;opacity:.95;}
+.welcome-choices{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin-bottom:26px;max-width:720px;}
+.welcome-card{background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.3);border-radius:16px;padding:26px 28px;width:260px;cursor:pointer;transition:all .2s;backdrop-filter:blur(10px);color:#fff;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;font-family:inherit;}
+.welcome-card:hover{background:rgba(255,255,255,.25);border-color:#fff;transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.25);}
+.welcome-card .wc-icon{font-size:48px;line-height:1;margin-bottom:4px;}
+.welcome-card .wc-title{font-size:18px;font-weight:700;}
+.welcome-card .wc-desc{font-size:12px;opacity:.85;line-height:1.5;}
+.welcome-themes{display:flex;gap:10px;margin-bottom:22px;padding:8px 16px;background:rgba(0,0,0,.18);border-radius:24px;align-items:center;font-size:12px;}
+.welcome-themes .wt-label{opacity:.9;margin-right:4px;}
+.welcome-theme-dot{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.5);cursor:pointer;padding:0;transition:transform .15s,border-color .15s;}
+.welcome-theme-dot:hover{transform:scale(1.15);}
+.welcome-theme-dot.active{border-color:#fff;border-width:3px;transform:scale(1.15);box-shadow:0 0 0 3px rgba(255,255,255,.25);}
+.welcome-remember{display:flex;align-items:center;gap:8px;font-size:13px;opacity:.9;background:rgba(0,0,0,.18);padding:10px 18px;border-radius:20px;cursor:pointer;}
+.welcome-remember input{width:16px;height:16px;cursor:pointer;}
+
+/* Desktop */
+#desktopUI{height:100vh;display:flex;flex-direction:column;}
+.titlebar{height:36px;background:var(--accent);color:#fff;display:flex;align-items:center;padding:0 10px;user-select:none;flex-shrink:0;position:relative;gap:10px;transition:background .25s;}
+.quick-access{display:flex;gap:2px;}
+.quick-access button{background:transparent;border:none;color:#fff;width:28px;height:26px;border-radius:3px;font-size:13px;display:flex;align-items:center;justify-content:center;}
+.quick-access button:hover{background:rgba(255,255,255,.2);}
+.quick-access button:disabled{opacity:.4;cursor:default;}
+.quick-access button:disabled:hover{background:transparent;}
+.title-brand{font-weight:500;font-size:14px;padding-right:10px;border-right:1px solid rgba(255,255,255,.25);margin-right:4px;height:24px;display:flex;align-items:center;}
+.title-menu{display:flex;}
+.title-menu button{background:transparent;border:none;color:#fff;padding:6px 10px;font-size:12px;border-radius:3px;}
+.title-menu button:hover{background:rgba(255,255,255,.15);}
+.title-right{margin-left:auto;display:flex;gap:4px;}
+.title-right button{background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 10px;font-size:11px;border-radius:3px;display:flex;align-items:center;gap:4px;}
+.title-right button:hover{background:rgba(255,255,255,.3);}
+.themes-menu{position:absolute;top:40px;right:10px;background:var(--bg-white);color:var(--text);border:1px solid var(--border);border-radius:6px;box-shadow:0 12px 32px rgba(0,0,0,.22);padding:12px;z-index:600;display:none;min-width:280px;}
+.themes-menu.open{display:block;}
+.themes-menu-title{font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:10px;}
+.themes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
+.theme-card{border:2px solid transparent;border-radius:8px;padding:8px 6px;background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--text);transition:.15s;font-family:inherit;}
+.theme-card:hover{background:var(--hover-bg-light);}
+.theme-card.active{border-color:var(--accent);background:var(--accent-light);}
+.theme-preview{width:48px;height:32px;border-radius:5px;border:1px solid var(--border);position:relative;overflow:hidden;}
+.theme-preview .tp-bar{position:absolute;top:0;left:0;right:0;height:8px;}
+.theme-preview .tp-dot{position:absolute;bottom:5px;left:6px;width:8px;height:8px;border-radius:50%;}
+.theme-preview .tp-line{position:absolute;bottom:7px;right:6px;width:18px;height:3px;border-radius:2px;}
+.theme-custom-row{display:flex;align-items:center;gap:8px;padding-top:12px;border-top:1px solid var(--border-light);font-size:12px;}
+.theme-custom-row input[type=color]{width:44px;height:32px;border:1px solid var(--border);border-radius:6px;padding:2px;background:var(--bg-white);cursor:pointer;}
+.theme-custom-row button{margin-left:auto;background:var(--accent);color:#fff;border:none;padding:6px 12px;border-radius:5px;font-size:12px;font-weight:500;}
+.theme-custom-row button:hover{background:var(--accent-hover);}
+.file-menu{position:absolute;top:36px;left:8px;background:var(--bg-white);color:var(--text);border:1px solid var(--border);border-radius:4px;box-shadow:0 8px 24px rgba(0,0,0,.2);min-width:260px;padding:6px 0;z-index:500;display:none;}
+.file-menu.open{display:block;}
+.file-menu-item{display:flex;align-items:center;gap:12px;padding:9px 16px;font-size:13px;cursor:pointer;border:none;background:transparent;width:100%;text-align:left;color:var(--text);}
+.file-menu-item:hover{background:var(--bg-panel);}
+.file-menu-item .fm-icon{width:20px;text-align:center;font-size:15px;}
+.file-menu-item .fm-shortcut{margin-left:auto;font-size:11px;color:#999;}
+.file-menu-divider{height:1px;background:var(--border-light);margin:6px 0;}
+.ribbon{background:var(--bg-panel);border-bottom:1px solid var(--border);flex-shrink:0;transition:background .25s;}
+.ribbon-tabs{display:flex;padding:0 8px;background:var(--bg-panel);border-bottom:1px solid var(--border-light);height:28px;align-items:flex-end;}
+.ribbon-tab{background:transparent;border:none;padding:6px 14px;font-size:12px;color:var(--text-muted);border-bottom:2px solid transparent;border-radius:0;height:28px;line-height:1;}
+.ribbon-tab:hover{background:var(--hover-bg);}
+.ribbon-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;background:var(--bg-white);}
+.ribbon-body{height:92px;overflow:hidden;background:var(--bg-white);position:relative;}
+.ribbon-page{position:absolute;inset:0;display:flex;padding:4px;overflow-x:auto;}
+.ribbon-page.hidden{display:none;}
+.ribbon-group{display:flex;flex-direction:column;padding:0 10px;border-right:1px solid var(--border-light);height:100%;flex-shrink:0;}
+.ribbon-group:last-child{border-right:none;}
+.ribbon-group-items{flex:1;display:flex;align-items:center;gap:3px;}
+.ribbon-group-label{text-align:center;font-size:10px;color:var(--text-muted);padding:2px 0;white-space:nowrap;}
+.rb{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:42px;height:62px;padding:4px 6px;background:transparent;border:1px solid transparent;border-radius:3px;color:var(--text);font-size:10px;gap:3px;}
+.rb:hover{background:var(--hover-bg-light);border-color:var(--border);}
+.rb:active{background:var(--hover-bg);}
+.rb .icon{font-size:18px;line-height:1;}
+.rb.big{min-width:60px;}
+.rb.big .icon{font-size:22px;}
+.rb.small{height:26px;min-width:26px;width:26px;padding:0;font-size:13px;border-radius:3px;}
+.ribbon-select{background:var(--bg-white);border:1px solid var(--border);border-radius:2px;padding:3px 4px;font-size:11px;color:var(--text);height:22px;min-width:110px;}
+.ribbon-number{background:var(--bg-white);border:1px solid var(--border);border-radius:2px;padding:3px 4px;font-size:11px;width:50px;height:22px;}
+.ribbon-input{display:flex;flex-direction:column;gap:3px;align-items:flex-start;padding:4px 2px;}
+.color-btn{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;background:transparent;border:1px solid transparent;border-radius:3px;padding:6px 8px;height:62px;min-width:46px;color:var(--text);}
+.color-btn:hover{background:var(--hover-bg-light);border-color:var(--border);}
+.color-btn .icon{font-size:18px;}
+.color-btn input[type=color]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;border:none;}
+.color-strip{width:100%;height:4px;border-radius:2px;}
+.color-preset{width:32px;height:32px;border-radius:3px;border:1px solid var(--border);cursor:pointer;padding:0;}
+.color-preset:hover{outline:2px solid var(--accent);outline-offset:1px;}
+.workspace{flex:1;display:flex;overflow:hidden;background:var(--bg-page);transition:background .25s;}
+.slides-panel{width:190px;background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:background .25s;}
+.slides-panel-header{padding:8px 10px;font-size:12px;font-weight:600;color:var(--text-muted);border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;}
+.slides-panel-header button{background:transparent;border:none;color:var(--text-muted);width:24px;height:24px;border-radius:3px;font-size:16px;}
+.slides-panel-header button:hover{background:var(--hover-bg);color:var(--accent);}
+.slides-list{flex:1;overflow-y:auto;padding:8px;}
+.slide-thumb{display:flex;gap:6px;align-items:flex-start;margin-bottom:6px;cursor:pointer;padding:2px;border-radius:2px;}
+.slide-thumb:hover{background:var(--hover-bg);}
+.slide-thumb.active .thumb-canvas{outline:2px solid var(--accent);outline-offset:1px;}
+.slide-thumb .num{font-size:11px;color:var(--text-muted);width:16px;text-align:right;padding-top:6px;flex-shrink:0;}
+.thumb-canvas{flex:1;aspect-ratio:16/9;background:#fff;border:1px solid var(--border);border-radius:2px;position:relative;overflow:hidden;}
+.thumb-canvas .mini{position:absolute;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.1;}
+.slides-panel-footer{padding:6px;border-top:1px solid var(--border-light);display:flex;gap:6px;}
+.slides-panel-footer button{flex:1;background:var(--bg-white);border:1px solid var(--border);border-radius:3px;padding:6px;font-size:12px;color:var(--text);}
+.slides-panel-footer button:hover{background:var(--hover-bg-light);}
+.canvas-area{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--bg-page);position:relative;transition:background .25s;}
+.statusbar{height:28px;background:var(--bg-panel);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 8px;font-size:11px;color:var(--text-muted);gap:8px;flex-shrink:0;transition:background .25s;}
+.statusbar .spacer{flex:1;}
+.statusbar .nav-btn{background:transparent;border:1px solid transparent;color:var(--text-muted);padding:2px 8px;border-radius:3px;font-size:12px;display:flex;align-items:center;gap:4px;}
+.statusbar .nav-btn:hover{background:var(--hover-bg);border-color:var(--border);}
+.statusbar .nav-btn:disabled{opacity:.4;cursor:default;}
+.statusbar .nav-btn:disabled:hover{background:transparent;border-color:transparent;}
+.statusbar .zoom-btn{background:transparent;border:1px solid transparent;color:var(--text-muted);padding:2px 6px;border-radius:3px;font-size:11px;}
+.statusbar .zoom-btn:hover{background:var(--hover-bg);}
+
+/* Mobile */
+#mobileUI{height:100vh;display:flex;flex-direction:column;background:var(--bg-page);transition:background .25s;}
+.m-topbar{height:54px;background:var(--accent);color:#fff;display:flex;align-items:center;padding:0 8px;gap:6px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.15);transition:background .25s;}
+.m-topbar button{background:rgba(255,255,255,.15);border:none;color:#fff;width:38px;height:38px;border-radius:8px;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.m-topbar button:active{background:rgba(255,255,255,.3);}
+.m-topbar button.m-accent{background:rgba(255,255,255,.28);width:auto;padding:0 10px;gap:6px;font-size:13px;font-weight:600;}
+.m-title{flex:1;text-align:center;font-weight:500;font-size:16px;}
+.m-slides-strip{display:flex;gap:8px;padding:10px;overflow-x:auto;background:var(--bg-panel);border-bottom:1px solid var(--border);flex-shrink:0;height:92px;scrollbar-width:none;transition:background .25s;}
+.m-slides-strip::-webkit-scrollbar{display:none;}
+.m-slide-thumb{width:116px;height:65px;border:2px solid var(--border);border-radius:6px;background:#fff;position:relative;overflow:hidden;flex-shrink:0;cursor:pointer;}
+.m-slide-thumb.active{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-light);}
+.m-slide-thumb .mini{position:absolute;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.1;}
+.m-slide-add{width:116px;height:65px;flex-shrink:0;border:2px dashed var(--border);border-radius:6px;background:transparent;color:var(--text-muted);font-size:28px;display:flex;align-items:center;justify-content:center;}
+.m-slide-add:active{background:var(--hover-bg);}
+.m-canvas{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;padding:10px;}
+.m-toolbar{display:flex;background:var(--bg-white);border-top:1px solid var(--border);padding:6px 4px;flex-shrink:0;justify-content:space-around;padding-bottom:max(6px,env(safe-area-inset-bottom));transition:background .25s;}
+.m-toolbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:transparent;border:none;padding:8px 2px;color:var(--text-muted);font-size:10px;border-radius:8px;}
+.m-toolbar button:active{background:var(--hover-bg-light);}
+.m-toolbar button .icon{font-size:22px;line-height:1;color:var(--accent);}
+.m-toolbar button .icon-text{font-weight:700;font-size:20px;line-height:1;color:var(--accent);}
+.m-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:199;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s;}
+.m-backdrop.open{opacity:1;visibility:visible;}
+.m-sheet{position:fixed;left:0;right:0;bottom:0;background:var(--bg-white);color:var(--text);border-top-left-radius:18px;border-top-right-radius:18px;box-shadow:0 -8px 32px rgba(0,0,0,.25);transform:translateY(110%);transition:transform .28s cubic-bezier(.32,.72,0,1),background .25s;z-index:200;max-height:80vh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom);}
+.m-sheet.open{transform:translateY(0);}
+.m-sheet-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:8px auto 0;}
+.m-sheet-header{padding:12px 20px 8px;font-weight:600;font-size:15px;display:flex;justify-content:space-between;align-items:center;}
+.m-sheet-header button{background:transparent;border:none;color:var(--text-muted);width:32px;height:32px;font-size:18px;border-radius:8px;}
+.m-sheet-body{padding:8px 20px 24px;overflow-y:auto;}
+.m-sheet-section{padding:12px 0;border-bottom:1px solid var(--border-light);}
+.m-sheet-section:last-child{border-bottom:none;}
+.m-sheet-label{font-size:11px;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-weight:600;}
+.m-sheet-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.m-sheet-row select,.m-sheet-row input[type=number]{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:15px;color:var(--text);}
+.m-sheet-row input[type=number]{width:80px;}
+.m-sheet-row input[type=color]{width:48px;height:40px;border:1px solid var(--border);border-radius:8px;background:var(--bg-white);padding:3px;}
+.m-toggle-btn{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:15px;color:var(--text);min-width:48px;font-weight:500;}
+.m-toggle-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.m-color-presets{display:flex;gap:8px;flex-wrap:wrap;}
+.m-color-presets button{width:40px;height:40px;border-radius:8px;border:1px solid var(--border);}
+.m-themes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.m-theme-card{border:2px solid transparent;border-radius:10px;padding:8px 4px;background:var(--bg-panel);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--text);font-family:inherit;}
+.m-theme-card.active{border-color:var(--accent);background:var(--accent-light);}
+.m-theme-preview{width:56px;height:36px;border-radius:6px;border:1px solid var(--border);position:relative;overflow:hidden;}
+.m-theme-preview .tp-bar{position:absolute;top:0;left:0;right:0;height:9px;}
+.m-theme-preview .tp-dot{position:absolute;bottom:6px;left:7px;width:10px;height:10px;border-radius:50%;}
+.m-theme-preview .tp-line{position:absolute;bottom:8px;right:7px;width:20px;height:3px;border-radius:2px;}
+
+#slide{width:960px;height:540px;background:#fff;position:relative;box-shadow:0 2px 16px rgba(0,0,0,.18);transform-origin:center center;overflow:hidden;flex-shrink:0;}
+.element{position:absolute;padding:4px 6px;cursor:move;border:2px dashed transparent;user-select:none;-webkit-user-select:none;min-width:30px;min-height:20px;white-space:pre-wrap;word-wrap:break-word;outline:none;font-family:'Segoe UI',sans-serif;color:#222;}
+.element:hover{border-color:rgba(196,62,28,.5);}
+.element.selected{border-color:var(--accent);}
+.element[contenteditable="true"]{cursor:text;user-select:text;-webkit-user-select:text;border-color:var(--accent);border-style:solid;}
+.element.shape{padding:0;}
+.handle{position:absolute;width:12px;height:12px;background:var(--accent);border:2px solid #fff;border-radius:50%;z-index:1000;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.handle.br{right:-7px;bottom:-7px;cursor:nwse-resize;}
+.empty-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#aaa;font-style:italic;font-size:16px;pointer-events:none;text-align:center;padding:20px;}
+.toast{position:fixed;bottom:44px;left:50%;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;z-index:100001;opacity:0;transition:all .3s;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.3);max-width:90vw;text-align:center;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.present-overlay{position:fixed;inset:0;background:#000;z-index:9999;display:none;align-items:center;justify-content:center;}
+.present-overlay.active{display:flex;}
+#presentClone{width:100vw;height:56.25vw;max-height:100vh;max-width:177.78vh;background:#fff;position:relative;overflow:hidden;}
+.present-nav{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);padding:8px 16px;border-radius:24px;color:#fff;display:flex;gap:12px;align-items:center;font-size:14px;z-index:10000;backdrop-filter:blur(8px);}
+.present-nav button{background:rgba(255,255,255,.15);color:#fff;border:none;width:34px;height:34px;border-radius:50%;font-size:14px;display:flex;align-items:center;justify-content:center;}
+.present-nav button:hover{background:rgba(255,255,255,.3);}
+.present-nav button:disabled{opacity:.4;cursor:default;}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:5px;}
+</style>
+</head>
+<body class="desktop">
+
+<div id="welcome">
+  <div class="welcome-logo">Nitpad банально</div>
+  <div class="welcome-title">Выберите версию интерфейса</div>
+  <div class="welcome-choices">
+    <button class="welcome-card" onclick="chooseMode('desktop')">
+      <div class="wc-icon">🖥️</div>
+      <div class="wc-title">Компьютерная</div>
+      <div class="wc-desc">Полный набор инструментов: ленточный интерфейс, панель слайдов, горячие клавиши</div>
+    </button>
+    <button class="welcome-card" onclick="chooseMode('mobile')">
+      <div class="wc-icon">📱</div>
+      <div class="wc-title">Мобильная</div>
+      <div class="wc-desc">Упрощённый интерфейс для сенсорных экранов: крупные кнопки, нижняя панель</div>
+    </button>
+  </div>
+  <div class="welcome-themes">
+    <span class="wt-label">Тема:</span>
+    <button class="welcome-theme-dot" data-theme="office" style="background:#C43E1C" title="Office Red"></button>
+    <button class="welcome-theme-dot" data-theme="blue" style="background:#2172C4" title="Blue Sky"></button>
+    <button class="welcome-theme-dot" data-theme="mint" style="background:#1F9D6B" title="Mint Fresh"></button>
+    <button class="welcome-theme-dot" data-theme="purple" style="background:#7C4DFF" title="Purple Night"></button>
+    <button class="welcome-theme-dot" data-theme="dark" style="background:#2C2C3A" title="Dark Mode"></button>
+    <button class="welcome-theme-dot" data-theme="sand" style="background:#B58A4A" title="Warm Sand"></button>
+  </div>
+  <label class="welcome-remember">
+    <input type="checkbox" id="rememberChoice">
+    <span>Запомнить мой выбор</span>
+  </label>
+</div>
+
+<div id="desktopUI">
+  <div class="titlebar">
+    <div class="quick-access">
+      <button id="saveBtn" onclick="savePresentation()" title="Сохранить (Ctrl+S)">💾</button>
+      <button id="undoBtn" onclick="undo()" title="Отменить (Ctrl+Z)" disabled>↶</button>
+      <button id="redoBtn" onclick="redo()" title="Повторить (Ctrl+Y)" disabled>↷</button>
+    </div>
+    <div class="title-brand">Nitpad банально</div>
+    <div class="title-menu">
+      <button onclick="toggleFileMenu(event)">Файл</button>
+    </div>
+    <div class="title-right">
+      <button onclick="toggleThemesMenu(event)" title="Тема оформления">🎨 Тема</button>
+      <button onclick="switchMode('mobile')" title="Мобильная версия">📱 Мобильная</button>
+    </div>
+
+    <div class="file-menu" id="fileMenu">
+      <button class="file-menu-item" onclick="newPresentation()"><span class="fm-icon">📄</span><span>Создать</span><span class="fm-shortcut">Ctrl+N</span></button>
+      <button class="file-menu-item" onclick="openPresentation()"><span class="fm-icon">📂</span><span>Открыть…</span><span class="fm-shortcut">Ctrl+O</span></button>
+      <div class="file-menu-divider"></div>
+      <button class="file-menu-item" onclick="savePresentation()"><span class="fm-icon">💾</span><span>Сохранить</span><span class="fm-shortcut">Ctrl+S</span></button>
+      <button class="file-menu-item" onclick="saveAsPresentation()"><span class="fm-icon">💾</span><span>Скачать файл .nitpad</span></button>
+      <div class="file-menu-divider"></div>
+      <button class="file-menu-item" onclick="exportHTML()"><span class="fm-icon">🌐</span><span>Экспорт в HTML</span></button>
+      <div class="file-menu-divider"></div>
+      <button class="file-menu-item" onclick="clearSaved()"><span class="fm-icon">🗑</span><span>Очистить автосохранение</span></button>
+    </div>
+
+    <div class="themes-menu" id="themesMenu">
+      <div class="themes-menu-title">Тема</div>
+      <div class="themes-grid" id="desktopThemesGrid"></div>
+      <div class="theme-custom-row">
+        <label style="font-size:12px">Свой цвет:</label>
+        <input type="color" id="customAccent" value="#C43E1C">
+        <button onclick="applyCustomTheme()">Применить</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ribbon">
+    <div class="ribbon-tabs">
+      <button class="ribbon-tab active" data-tab="home">Главная</button>
+      <button class="ribbon-tab" data-tab="insert">Вставка</button>
+      <button class="ribbon-tab" data-tab="design">Дизайн</button>
+      <button class="ribbon-tab" data-tab="slideshow">Показ слайдов</button>
+    </div>
+    <div class="ribbon-body">
+      <div class="ribbon-page" data-page="home">
+        <div class="ribbon-group"><div class="ribbon-group-items">
+          <button class="rb small" onclick="duplicateSelected()" title="Копировать">⧉</button>
+          <button class="rb small" onclick="deleteSelected()" title="Удалить">✕</button>
+        </div><div class="ribbon-group-label">Буфер</div></div>
+        <div class="ribbon-group"><div class="ribbon-group-items">
+          <div class="ribbon-input">
+            <select class="ribbon-select" id="fontFamily" onchange="applyStyle('fontFamily', this.value)">
+              <option>Segoe UI</option><option>Arial</option><option>Georgia</option>
+              <option>Times New Roman</option><option>Courier New</option><option>Impact</option>
+            </select>
+            <input type="number" class="ribbon-number" id="fontSize" min="8" max="200" value="28" onchange="applyStyle('fontSize', this.value + 'px')">
+          </div>
+          <button class="rb small" onclick="toggleStyle('fontWeight','bold')"><b>B</b></button>
+          <button class="rb small" onclick="toggleStyle('fontStyle','italic')"><i>I</i></button>
+          <button class="rb small" onclick="toggleStyle('textDecoration','underline')"><u>U</u></button>
+          <button class="color-btn" title="Цвет текста">
+            <span class="icon" style="color:var(--accent);font-weight:700">A</span>
+            <span class="color-strip" id="fgStrip" style="background:#222"></span>
+            <input type="color" id="fgColor" value="#222222" onchange="applyStyle('color', this.value); document.getElementById('fgStrip').style.background = this.value">
+          </button>
+        </div><div class="ribbon-group-label">Шрифт</div></div>
+        <div class="ribbon-group"><div class="ribbon-group-items">
+          <button class="rb small" onclick="applyStyle('textAlign','left')">⬅</button>
+          <button class="rb small" onclick="applyStyle('textAlign','center')">⬌</button>
+          <button class="rb small" onclick="applyStyle('textAlign','right')">➡</button>
+        </div><div class="ribbon-group-label">Абзац</div></div>
+        <div class="ribbon-group"><div class="ribbon-group-items">
+          <button class="color-btn" title="Заливка фигуры">
+            <span class="icon">🎨</span>
+            <span class="color-strip" id="bgStrip" style="background:#89b4fa"></span>
+            <input type="color" id="bgColor" value="#89b4fa" onchange="applyStyle('backgroundColor', this.value); document.getElementById('bgStrip').style.background = this.value">
+          </button>
+        </div><div class="ribbon-group-label">Рисование</div></div>
+        <div class="ribbon-group"><div class="ribbon-group-items">
+          <button class="rb small" onclick="bringForward()">⬆</button>
+          <button class="rb small" onclick="sendBackward()">⬇</button>
+        </div><div class="ribbon-group-label">Порядок</div></div>
+      </div>
+      <div class="ribbon-page hidden" data-page="insert">
+        <div class="ribbon-group"><div class="ribbon-group-items">
+          <button class="rb big" onclick="addText()"><span class="icon">🅰</span>Текст</button>
+          <button class="rb big" onclick="addTitle()"><span class="icon" style="font-weight:700">T</span>Заголовок</button>
+        </div><div class="ribbon-group-label">Текст</div></div>
+        <div class="ribbon-group"><div class="ribbon-group-items">
+          <button class="rb big" onclick="addRect()"><span class="icon">▭</span>Прямоугольник</button>
+          <button class="rb big" onclick="addCircle()"><span class="icon">◯</span>Круг</button>
+        </div><div class="ribbon-group-label">Фигуры</div></div>
+      </div>
+      <div class="ribbon-page hidden" data-page="design">
+        <div class="ribbon-group"><div class="ribbon-group-items">
+          <button class="color-btn" title="Свой цвет фона">
+            <span class="icon">🖼</span>
+            <span class="color-strip" id="slideBgStrip" style="background:#ffffff"></span>
+            <input type="color" id="slideBg" value="#ffffff" onchange="setSlideBg(this.value); document.getElementById('slideBgStrip').style.background = this.value">
+          </button>
+        </div><div class="ribbon-group-label">Фон слайда</div></div>
+        <div class="ribbon-group"><div class="ribbon-group-items">
+          <button class="color-preset" style="background:#ffffff" onclick="applySlidePreset('#ffffff')"></button>
+          <button class="color-preset" style="background:#F3F2F1" onclick="applySlidePreset('#F3F2F1')"></button>
+          <button class="color-preset" style="background:#1e1e2e" onclick="applySlidePreset('#1e1e2e')"></button>
+          <button class="color-preset" style="background:#FBE5D6" onclick="applySlidePreset('#FBE5D6')"></button>
+          <button class="color-preset" style="background:#DEEBF7" onclick="applySlidePreset('#DEEBF7')"></button>
+          <button class="color-preset" style="background:#E2EFD9" onclick="applySlidePreset('#E2EFD9')"></button>
+        </div><div class="ribbon-group-label">Варианты</div></div>
+      </div>
+      <div class="ribbon-page hidden" data-page="slideshow">
+        <div class="ribbon-group"><div class="ribbon-group-items">
+          <button class="rb big" onclick="startPresent()"><span class="icon">▶</span>С начала</button>
+          <button class="rb big" onclick="startPresentFromCurrent()"><span class="icon">▶</span>С текущего</button>
+        </div><div class="ribbon-group-label">Начать показ</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="workspace">
+    <aside class="slides-panel">
+      <div class="slides-panel-header"><span>Слайды</span><button onclick="addSlide()">＋</button></div>
+      <div class="slides-list" id="slidesList"></div>
+      <div class="slides-panel-footer"><button onclick="deleteSlide()">Удалить слайд</button></div>
+    </aside>
+    <main class="canvas-area" id="desktopCanvasArea"><div id="slide" onclick="deselectIfBg(event)"></div></main>
+  </div>
+
+  <div class="statusbar">
+    <span id="statusText">Готово</span>
+    <span id="saveIndicator" style="color:var(--text-light);"></span>
+    <div class="spacer"></div>
+    <button class="nav-btn" id="prevBtn" onclick="prevSlide()">◀ Назад</button>
+    <button class="nav-btn" id="nextBtn" onclick="nextSlide()">Вперёд ▶</button>
+    <button class="zoom-btn" onclick="fitCanvas()">По размеру окна</button>
+    <span id="slideCounter">Слайд 1 из 1</span>
+  </div>
+</div>
+
+<div id="mobileUI">
+  <div class="m-topbar">
+    <button onclick="toggleMobileMenu(event)">☰</button>
+    <button class="m-accent" onclick="switchMode('desktop')">🖥 ПК</button>
+    <div class="m-title">Nitpad банально</div>
+    <button onclick="startPresent()">▶</button>
+  </div>
+  <div class="m-slides-strip" id="mobileSlidesStrip"></div>
+  <div class="m-canvas" id="mobileCanvas"></div>
+  <div class="m-toolbar">
+    <button onclick="addText()"><span class="icon-text">A</span><span>Текст</span></button>
+    <button onclick="addTitle()"><span class="icon-text">T</span><span>Заголовок</span></button>
+    <button onclick="addRect()"><span class="icon">▭</span><span>Фигура</span></button>
+    <button onclick="openMobileSheet()"><span class="icon">⚙</span><span>Стиль</span></button>
+    <button onclick="deleteSelected()"><span class="icon">🗑</span><span>Удалить</span></button>
+  </div>
+  <div class="file-menu" id="mobileMenu" style="top:54px;left:8px;">
+    <button class="file-menu-item" onclick="newPresentation()"><span class="fm-icon">📄</span><span>Создать</span></button>
+    <button class="file-menu-item" onclick="openPresentation()"><span class="fm-icon">📂</span><span>Открыть…</span></button>
+    <div class="file-menu-divider"></div>
+    <button class="file-menu-item" onclick="savePresentation()"><span class="fm-icon">💾</span><span>Сохранить</span></button>
+    <button class="file-menu-item" onclick="saveAsPresentation()"><span class="fm-icon">💾</span><span>Скачать .nitpad</span></button>
+    <div class="file-menu-divider"></div>
+    <button class="file-menu-item" onclick="exportHTML()"><span class="fm-icon">🌐</span><span>Экспорт в HTML</span></button>
+    <div class="file-menu-divider"></div>
+    <button class="file-menu-item" onclick="closeAllMenus();openMobileThemes()"><span class="fm-icon">🎨</span><span>Тема оформления…</span></button>
+    <button class="file-menu-item" onclick="switchMode('desktop')"><span class="fm-icon">🖥</span><span>Компьютерная версия</span></button>
+    <button class="file-menu-item" onclick="showWelcome()"><span class="fm-icon">🔄</span><span>Сменить версию…</span></button>
+  </div>
+</div>
+
+<div class="m-backdrop" id="mobileThemesBackdrop" onclick="closeMobileThemes()"></div>
+<div class="m-sheet" id="mobileThemesSheet">
+  <div class="m-sheet-handle"></div>
+  <div class="m-sheet-header"><span>🎨 Тема оформления</span><button onclick="closeMobileThemes()">✕</button></div>
+  <div class="m-sheet-body">
+    <div class="m-sheet-section"><div class="m-sheet-label">Выберите тему</div><div class="m-themes-grid" id="mobileThemesGrid"></div></div>
+    <div class="m-sheet-section"><div class="m-sheet-label">Свой акцентный цвет</div>
+      <div class="m-sheet-row">
+        <input type="color" id="mobileCustomAccent" value="#C43E1C">
+        <button class="m-toggle-btn" onclick="applyCustomThemeMobile()" style="background:var(--accent);color:#fff;border-color:var(--accent)">Применить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="m-backdrop" id="mobileBackdrop" onclick="closeMobileSheet()"></div>
+<div class="m-sheet" id="mobileSheet">
+  <div class="m-sheet-handle"></div>
+  <div class="m-sheet-header"><span>Стиль элемента</span><button onclick="closeMobileSheet()">✕</button></div>
+  <div class="m-sheet-body">
+    <div class="m-sheet-section"><div class="m-sheet-label">Шрифт</div>
+      <div class="m-sheet-row">
+        <select id="mFontFamily" style="flex:1" onchange="applyStyle('fontFamily', this.value)">
+          <option>Segoe UI</option><option>Arial</option><option>Georgia</option>
+          <option>Times New Roman</option><option>Courier New</option><option>Impact</option>
+        </select>
+        <input type="number" id="mFontSize" min="8" max="200" value="28" onchange="applyStyle('fontSize', this.value + 'px')">
+      </div>
+    </div>
+    <div class="m-sheet-section"><div class="m-sheet-label">Начертание</div>
+      <div class="m-sheet-row">
+        <button class="m-toggle-btn" onclick="toggleStyle('fontWeight','bold')" id="mBold"><b>B</b></button>
+        <button class="m-toggle-btn" onclick="toggleStyle('fontStyle','italic')" id="mItalic"><i>I</i></button>
+        <button class="m-toggle-btn" onclick="toggleStyle('textDecoration','underline')" id="mUnderline"><u>U</u></button>
+      </div>
+    </div>
+    <div class="m-sheet-section"><div class="m-sheet-label">Выравнивание</div>
+      <div class="m-sheet-row">
+        <button class="m-toggle-btn" onclick="applyStyle('textAlign','left')">⬅</button>
+        <button class="m-toggle-btn" onclick="applyStyle('textAlign','center')">⬌</button>
+        <button class="m-toggle-btn" onclick="applyStyle('textAlign','right')">➡</button>
+      </div>
+    </div>
+    <div class="m-sheet-section"><div class="m-sheet-label">Цвет текста</div>
+      <div class="m-sheet-row">
+        <input type="color" id="mFgColor" value="#222222" onchange="applyStyle('color', this.value)">
+        <div class="m-color-presets">
+          <button style="background:#222" onclick="applyStyle('color','#222')"></button>
+          <button style="background:#C43E1C" onclick="applyStyle('color','#C43E1C')"></button>
+          <button style="background:#fff" onclick="applyStyle('color','#fff')"></button>
+          <button style="background:#89b4fa" onclick="applyStyle('color','#89b4fa')"></button>
+        </div>
+      </div>
+    </div>
+    <div class="m-sheet-section"><div class="m-sheet-label">Цвет заливки</div>
+      <div class="m-sheet-row">
+        <input type="color" id="mBgColor" value="#89b4fa" onchange="applyStyle('backgroundColor', this.value)">
+        <div class="m-color-presets">
+          <button style="background:#89b4fa" onclick="applyStyle('backgroundColor','#89b4fa')"></button>
+          <button style="background:#f5c2e7" onclick="applyStyle('backgroundColor','#f5c2e7')"></button>
+          <button style="background:#a6e3a1" onclick="applyStyle('backgroundColor','#a6e3a1')"></button>
+          <button style="background:#f9e2af" onclick="applyStyle('backgroundColor','#f9e2af')"></button>
+          <button style="background:#C43E1C" onclick="applyStyle('backgroundColor','#C43E1C')"></button>
+        </div>
+      </div>
+    </div>
+    <div class="m-sheet-section"><div class="m-sheet-label">Фон слайда</div>
+      <div class="m-sheet-row">
+        <input type="color" id="mSlideBg" value="#ffffff" onchange="setSlideBg(this.value)">
+        <div class="m-color-presets">
+          <button style="background:#fff" onclick="applySlidePreset('#ffffff')"></button>
+          <button style="background:#F3F2F1" onclick="applySlidePreset('#F3F2F1')"></button>
+          <button style="background:#1e1e2e" onclick="applySlidePreset('#1e1e2e')"></button>
+          <button style="background:#FBE5D6" onclick="applySlidePreset('#FBE5D6')"></button>
+          <button style="background:#DEEBF7" onclick="applySlidePreset('#DEEBF7')"></button>
+        </div>
+      </div>
+    </div>
+    <div class="m-sheet-section"><div class="m-sheet-label">Порядок</div>
+      <div class="m-sheet-row">
+        <button class="m-toggle-btn" onclick="bringForward()">⬆ Выше</button>
+        <button class="m-toggle-btn" onclick="sendBackward()">⬇ Ниже</button>
+        <button class="m-toggle-btn" onclick="duplicateSelected()">⧉ Копия</button>
+      </div>
+    </div>
+    <div class="m-sheet-section"><div class="m-sheet-label">Тема</div>
+      <div class="m-sheet-row">
+        <button class="m-toggle-btn" onclick="closeMobileSheet();openMobileThemes()" style="flex:1;background:var(--accent);color:#fff;border-color:var(--accent)">🎨 Открыть выбор темы</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="present-overlay" id="presentOverlay">
+  <div id="presentClone"></div>
+  <div class="present-nav">
+    <button id="pPrevBtn" onclick="presentPrev()">◀</button>
+    <span id="presentCounter">1 / 1</span>
+    <button id="pNextBtn" onclick="presentNext()">▶</button>
+    <button onclick="stopPresent()">✕</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="fileInput" accept=".nitpad,.json" style="display:none">
+
+<script>
+const THEMES = {
+  office: { name:'Office Red', accent:'#C43E1C', accentHover:'#E85A2A', accentLight:'#FBE5D6', accentDark:'#9A2F14', bgPage:'#E6E6E6', bgPanel:'#F3F2F1', bgWhite:'#fff', border:'#D2D0CE', borderLight:'#E0E0E0', text:'#333', textMuted:'#767676', textLight:'#888', hoverBg:'#E1DFDD', hoverBgLight:'#F0EFEE' },
+  blue: { name:'Blue Sky', accent:'#2172C4', accentHover:'#3D8BDB', accentLight:'#DEEBF7', accentDark:'#14518F', bgPage:'#E4EDF5', bgPanel:'#F0F5FA', bgWhite:'#fff', border:'#C8D6E3', borderLight:'#DEE7F0', text:'#22344A', textMuted:'#6B7A8C', textLight:'#8A97A5', hoverBg:'#D6E4F0', hoverBgLight:'#E8F1F9' },
+  mint: { name:'Mint Fresh', accent:'#1F9D6B', accentHover:'#2DBE85', accentLight:'#DCF2E8', accentDark:'#137348', bgPage:'#E6F2EC', bgPanel:'#F1F8F4', bgWhite:'#fff', border:'#C9DED2', borderLight:'#DEF0E6', text:'#1F3B2E', textMuted:'#5F7A6E', textLight:'#829890', hoverBg:'#D6EDE0', hoverBgLight:'#E8F5EE' },
+  purple: { name:'Purple Night', accent:'#7C4DFF', accentHover:'#9D78FF', accentLight:'#EBE2FF', accentDark:'#5A33CC', bgPage:'#EEEAFA', bgPanel:'#F5F2FD', bgWhite:'#fff', border:'#D4CBF0', borderLight:'#E6E0F7', text:'#2A1F4A', textMuted:'#6F6390', textLight:'#8B82A8', hoverBg:'#DDD2F5', hoverBgLight:'#EDE7FB' },
+  dark: { name:'Dark Mode', accent:'#FF6B3D', accentHover:'#FF8A63', accentLight:'#3A2820', accentDark:'#E8481C', bgPage:'#1E1E2A', bgPanel:'#252532', bgWhite:'#2C2C3A', border:'#3E3E50', borderLight:'#333345', text:'#E8E8F0', textMuted:'#A0A0B8', textLight:'#8A8AA0', hoverBg:'#333344', hoverBgLight:'#2E2E3E' },
+  sand: { name:'Warm Sand', accent:'#B58A4A', accentHover:'#CDA266', accentLight:'#F5EBD8', accentDark:'#8F6C38', bgPage:'#EFE8DA', bgPanel:'#F8F3E8', bgWhite:'#fff', border:'#D9CCB3', borderLight:'#EBE0CC', text:'#3D3120', textMuted:'#7A6B54', textLight:'#93856E', hoverBg:'#E5D9C0', hoverBgLight:'#F0E8D5' }
+};
+let currentTheme = 'office';
+const THEME_KEY = 'nitpad_theme';
+function applyTheme(k){
+  const t = THEMES[k]; if(!t) return;
+  currentTheme = k;
+  const r = document.documentElement;
+  r.style.setProperty('--accent', t.accent);
+  r.style.setProperty('--accent-hover', t.accentHover);
+  r.style.setProperty('--accent-light', t.accentLight);
+  r.style.setProperty('--accent-dark', t.accentDark);
+  r.style.setProperty('--bg-page', t.bgPage);
+  r.style.setProperty('--bg-panel', t.bgPanel);
+  r.style.setProperty('--bg-white', t.bgWhite);
+  r.style.setProperty('--border', t.border);
+  r.style.setProperty('--border-light', t.borderLight);
+  r.style.setProperty('--text', t.text);
+  r.style.setProperty('--text-muted', t.textMuted);
+  r.style.setProperty('--text-light', t.textLight);
+  r.style.setProperty('--hover-bg', t.hoverBg);
+  r.style.setProperty('--hover-bg-light', t.hoverBgLight);
+  try{localStorage.setItem(THEME_KEY,k);}catch(e){}
+  renderThemePickers();
+}
+function applyCustomTheme(){ applyCustomAccent(document.getElementById('customAccent').value); showToast('Свой цвет применён'); }
+function applyCustomThemeMobile(){ applyCustomAccent(document.getElementById('mobileCustomAccent').value); closeMobileThemes(); showToast('Свой цвет применён'); }
+function applyCustomAccent(hex){
+  const r = document.documentElement;
+  r.style.setProperty('--accent', hex);
+  r.style.setProperty('--accent-hover', lighten(hex,15));
+  r.style.setProperty('--accent-light', lighten(hex,85));
+  r.style.setProperty('--accent-dark', darken(hex,20));
+  currentTheme = 'custom';
+  try{localStorage.setItem(THEME_KEY,'custom:'+hex);}catch(e){}
+  document.querySelectorAll('.theme-card.active,.m-theme-card.active,.welcome-theme-dot.active').forEach(el=>el.classList.remove('active'));
+}
+function hexToRgb(h){const m=h.replace('#','').match(/.{2}/g);return m?m.map(x=>parseInt(x,16)):[196,62,28];}
+function lighten(h,p){const[r,g,b]=hexToRgb(h);const f=p/100;return '#'+[r,g,b].map(c=>Math.round(c+(255-c)*f).toString(16).padStart(2,'0')).join('');}
+function darken(h,p){const[r,g,b]=hexToRgb(h);const f=1-p/100;return '#'+[r,g,b].map(c=>Math.round(c*f).toString(16).padStart(2,'0')).join('');}
+function renderThemePickers(){
+  const g = document.getElementById('desktopThemesGrid');
+  if(g){g.innerHTML='';Object.entries(THEMES).forEach(([k,t])=>{const b=document.createElement('button');b.className='theme-card'+(currentTheme===k?' active':'');b.onclick=()=>{applyTheme(k);showToast('Тема: '+t.name);};b.innerHTML=`<div class="theme-preview" style="background:${t.bgWhite}"><div class="tp-bar" style="background:${t.accent}"></div><div class="tp-dot" style="background:${t.accentLight}"></div><div class="tp-line" style="background:${t.textMuted}"></div></div><span>${t.name}</span>`;g.appendChild(b);});}
+  const mg = document.getElementById('mobileThemesGrid');
+  if(mg){mg.innerHTML='';Object.entries(THEMES).forEach(([k,t])=>{const b=document.createElement('button');b.className='m-theme-card'+(currentTheme===k?' active':'');b.onclick=()=>{applyTheme(k);showToast('Тема: '+t.name);closeMobileThemes();};b.innerHTML=`<div class="m-theme-preview" style="background:${t.bgWhite}"><div class="tp-bar" style="background:${t.accent}"></div><div class="tp-dot" style="background:${t.accentLight}"></div><div class="tp-line" style="background:${t.textMuted}"></div></div><span>${t.name}</span>`;mg.appendChild(b);});}
+  document.querySelectorAll('.welcome-theme-dot').forEach(d=>d.classList.toggle('active',d.dataset.theme===currentTheme));
+}
+document.querySelectorAll('.welcome-theme-dot').forEach(d=>d.addEventListener('click',()=>applyTheme(d.dataset.theme)));
+function loadSavedTheme(){try{const s=localStorage.getItem(THEME_KEY);if(s){if(s.startsWith('custom:')){applyCustomAccent(s.slice(7));return;}if(THEMES[s]){applyTheme(s);return;}}}catch(e){}applyTheme('office');}
+function toggleThemesMenu(e){e.stopPropagation();const m=document.getElementById('themesMenu');const w=m.classList.contains('open');closeAllMenus();if(!w)m.classList.add('open');}
+
+let slides=[createEmptySlide()];
+let currentSlide=0;
+let selectedEl=null;
+let idCounter=1;
+let history=[];
+let historyIndex=-1;
+const MAX_HISTORY=80;
+let suppressHistory=false;
+function createEmptySlide(){return{bg:'#ffffff',elements:[]};}
+function uid(){return 'el_'+(idCounter++)+'_'+Date.now();}
+const slideEl=document.getElementById('slide');
+const slidesListEl=document.getElementById('slidesList');
+const mobileStripEl=document.getElementById('mobileSlidesStrip');
+const desktopCanvasArea=document.getElementById('desktopCanvasArea');
+const mobileCanvas=document.getElementById('mobileCanvas');
+const welcomeEl=document.getElementById('welcome');
+function chooseMode(m){
+  const rem=document.getElementById('rememberChoice').checked;
+  if(rem){try{localStorage.setItem('nitpad_mode',m);}catch(e){}}else{try{localStorage.removeItem('nitpad_mode');}catch(e){}}
+  welcomeEl.classList.add('hide');switchMode(m);
+}
+function showWelcome(){closeAllMenus();welcomeEl.classList.remove('hide');try{document.getElementById('rememberChoice').checked=!!localStorage.getItem('nitpad_mode');}catch(e){}}
+function closeAllMenus(){document.getElementById('fileMenu').classList.remove('open');document.getElementById('mobileMenu').classList.remove('open');document.getElementById('themesMenu').classList.remove('open');closeMobileSheet();closeMobileThemes();}
+function switchMode(m){closeAllMenus();document.body.className=m;const t=(m==='mobile')?mobileCanvas:desktopCanvasArea;t.appendChild(slideEl);requestAnimationFrame(()=>{renderSlide();fitCanvas();});setTimeout(fitCanvas,80);setTimeout(fitCanvas,300);}
+function fitCanvas(){const p=slideEl.parentElement;if(!p)return;const pw=p.clientWidth-24;const ph=p.clientHeight-24;if(pw<=0||ph<=0)return;slideEl.style.transform=`scale(${Math.min(pw/960,ph/540)})`;}
+window.addEventListener('resize',fitCanvas);
+window.addEventListener('orientationchange',()=>setTimeout(fitCanvas,200));
+function snapshot(){return JSON.stringify({slides,currentSlide,idCounter});}
+function pushHistory(){if(suppressHistory)return;const s=snapshot();if(historyIndex>=0&&history[historyIndex]===s)return;history=history.slice(0,historyIndex+1);history.push(s);if(history.length>MAX_HISTORY)history.shift();historyIndex=history.length-1;updateHistoryButtons();}
+function undo(){if(historyIndex<=0)return;historyIndex--;applySnapshot(history[historyIndex]);updateHistoryButtons();}
+function redo(){if(historyIndex>=history.length-1)return;historyIndex++;applySnapshot(history[historyIndex]);updateHistoryButtons();}
+function applySnapshot(s){suppressHistory=true;try{const d=JSON.parse(s);slides=d.slides;currentSlide=Math.min(d.currentSlide,slides.length-1);idCounter=d.idCounter||idCounter;selectedEl=null;renderSlide();fitCanvas();}finally{suppressHistory=false;}}
+function updateHistoryButtons(){const u=document.getElementById('undoBtn'),r=document.getElementById('redoBtn');if(u)u.disabled=historyIndex<=0;if(r)r.disabled=historyIndex>=history.length-1;}
+document.querySelectorAll('.ribbon-tab').forEach(t=>t.addEventListener('click',()=>{document.querySelectorAll('.ribbon-tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');const n=t.dataset.tab;document.querySelectorAll('.ribbon-page').forEach(p=>p.classList.toggle('hidden',p.dataset.page!==n));}));
+function renderSlidesList(){
+  slidesListEl.innerHTML='';
+  slides.forEach((s,i)=>{const t=document.createElement('div');t.className='slide-thumb'+(i===currentSlide?' active':'');t.onclick=()=>selectSlide(i);t.innerHTML=`<div class="num">${i+1}</div><div class="thumb-canvas"></div>`;fillThumb(t.querySelector('.thumb-canvas'),s,8);slidesListEl.appendChild(t);});
+  mobileStripEl.innerHTML='';
+  slides.forEach((s,i)=>{const t=document.createElement('div');t.className='m-slide-thumb'+(i===currentSlide?' active':'');t.onclick=()=>selectSlide(i);fillThumb(t,s,8.5);mobileStripEl.appendChild(t);});
+  const a=document.createElement('button');a.className='m-slide-add';a.textContent='＋';a.onclick=addSlide;mobileStripEl.appendChild(a);
+  document.getElementById('slideCounter').textContent=`Слайд ${currentSlide+1} из ${slides.length}`;
+  updateNavButtons();
+}
+function fillThumb(c,s,d){c.style.background=s.bg;[...c.querySelectorAll('.mini')].forEach(n=>n.remove());s.elements.forEach(el=>{const m=document.createElement('div');m.className='mini';m.style.left=(el.x/960*100)+'%';m.style.top=(el.y/540*100)+'%';m.style.width=(el.w/960*100)+'%';m.style.height=(el.h/540*100)+'%';m.style.fontSize=Math.max(2,(parseInt(el.style.fontSize)||20)/d)+'px';m.style.color=el.style.color||'#222';m.style.background=el.type==='shape'?(el.style.backgroundColor||'#89b4fa'):'transparent';m.style.borderRadius=el.shapeKind==='circle'?'50%':'2px';m.textContent=el.type==='shape'?'':(el.text||'').slice(0,40);c.appendChild(m);});}
+function renderSlide(){
+  const s=slides[currentSlide];
+  slideEl.style.background=s.bg;
+  slideEl.innerHTML='';
+  s.elements.forEach(el=>slideEl.appendChild(buildElement(el)));
+  if(selectedEl){const el=findEl(selectedEl);const div=slideEl.querySelector(`[data-id="${selectedEl}"]`);if(el&&div){div.classList.add('selected');attachHandle(div,el);updateToolbar(el);}else{selectedEl=null;}}
+  if(s.elements.length===0){const e=document.createElement('div');e.className='empty-hint';e.textContent='Добавьте текст или фигуру — панель сверху';slideEl.appendChild(e);}
+  renderSlidesList();
+}
+function buildElement(el){
+  const d=document.createElement('div');
+  d.className='element '+el.type;
+  d.dataset.id=el.id;
+  d.style.left=el.x+'px';d.style.top=el.y+'px';d.style.width=el.w+'px';d.style.height=el.h+'px';
+  Object.assign(d.style,el.style);
+  if(el.type==='shape'){d.style.borderRadius=el.shapeKind==='circle'?'50%':'6px';}
+  else{
+    d.textContent=el.text||'';
+    d.setAttribute('contenteditable','true');
+    d.spellcheck=false;
+    d.addEventListener('input',()=>{el.text=d.innerText;renderSlidesList();});
+    d.addEventListener('blur',()=>{el.text=d.innerText;renderSlidesList();pushHistory();});
+    d.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();d.blur();}});
+  }
+  d.addEventListener('mousedown',e=>onElementMouseDown(e,el,d));
+  d.addEventListener('click',e=>{e.stopPropagation();selectElement(el.id);});
+  d.addEventListener('touchstart',e=>onElementTouchStart(e,el,d),{passive:false});
+  return d;
+}
+function onElementMouseDown(e,el,div){
+  if(e.target.classList.contains('handle'))return;
+  if(e.button!==0)return;
+  if(div.isContentEditable&&document.activeElement===div)return;
+  const sx=e.clientX,sy=e.clientY,ox=el.x,oy=el.y,scale=getScale();
+  let dr=false;
+  function mv(ev){
+    const dx=(ev.clientX-sx),dy=(ev.clientY-sy);
+    if(!dr){if(Math.abs(dx)<4&&Math.abs(dy)<4)return;dr=true;if(div.isContentEditable)div.blur();document.body.style.userSelect='none';}
+    ev.preventDefault();
+    el.x=Math.max(0,Math.min(960-el.w,ox+dx/scale));
+    el.y=Math.max(0,Math.min(540-el.h,oy+dy/scale));
+    div.style.left=el.x+'px';div.style.top=el.y+'px';
+  }
+  function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);document.body.style.userSelect='';if(dr){renderSlidesList();pushHistory();}}
+  document.addEventListener('mousemove',mv);
+  document.addEventListener('mouseup',up);
+}
+function onElementTouchStart(e,el,div){
+  if(e.target.classList.contains('handle'))return;
+  if(div.isContentEditable&&document.activeElement===div)return;
+  if(e.touches.length!==1)return;
+  const t0=e.touches[0],sx=t0.clientX,sy=t0.clientY,ox=el.x,oy=el.y,scale=getScale();
+  let dr=false;
+  function mv(ev){
+    if(ev.touches.length!==1)return;
+    const t=ev.touches[0];const dx=t.clientX-sx,dy=t.clientY-sy;
+    if(!dr){if(Math.abs(dx)<6&&Math.abs(dy)<6)return;dr=true;if(div.isContentEditable)div.blur();}
+    ev.preventDefault();
+    el.x=Math.max(0,Math.min(960-el.w,ox+dx/scale));
+    el.y=Math.max(0,Math.min(540-el.h,oy+dy/scale));
+    div.style.left=el.x+'px';div.style.top=el.y+'px';
+  }
+  function end(){document.removeEventListener('touchmove',mv);document.removeEventListener('touchend',end);if(dr){renderSlidesList();pushHistory();}}
+  document.addEventListener('touchmove',mv,{passive:false});
+  document.addEventListener('touchend',end);
+}
+function startResize(e,el,div){
+  e.preventDefault();e.stopPropagation();
+  const sx=e.clientX,sy=e.clientY,ow=el.w,oh=el.h,scale=getScale();
+  function mv(ev){
+    el.w=Math.max(30,Math.min(960-el.x,ow+(ev.clientX-sx)/scale));
+    el.h=Math.max(20,Math.min(540-el.y,oh+(ev.clientY-sy)/scale));
+    div.style.width=el.w+'px';div.style.height=el.h+'px';
+  }
+  function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);renderSlidesList();pushHistory();}
+  document.addEventListener('mousemove',mv);
+  document.addEventListener('mouseup',up);
+}
+function selectSlide(i){currentSlide=i;selectedEl=null;renderSlide();const s=slides[i];const sb=document.getElementById('slideBg'),mb=document.getElementById('mSlideBg');if(sb)sb.value=s.bg;if(mb)mb.value=s.bg;const st=document.getElementById('slideBgStrip');if(st)st.style.background=s.bg;}
+function addSlide(){slides.splice(currentSlide+1,0,createEmptySlide());currentSlide++;selectedEl=null;renderSlide();pushHistory();}
+function deleteSlide(){if(slides.length===1){showToast('Нельзя удалить единственный слайд');return;}slides.splice(currentSlide,1);currentSlide=Math.min(currentSlide,slides.length-1);selectedEl=null;renderSlide();pushHistory();}
+function nextSlide(){if(currentSlide<slides.length-1)selectSlide(currentSlide+1);}
+function prevSlide(){if(currentSlide>0)selectSlide(currentSlide-1);}
+function updateNavButtons(){const p=document.getElementById('prevBtn'),n=document.getElementById('nextBtn');if(p)p.disabled=currentSlide<=0;if(n)n.disabled=currentSlide>=slides.length-1;const pp=document.getElementById('pPrevBtn'),pn=document.getElementById('pNextBtn');if(pp)pp.disabled=presentIndex<=0;if(pn)pn.disabled=presentIndex>=slides.length-1;}
+function getCurrentElements(){return slides[currentSlide].elements;}
+function findEl(id){return getCurrentElements().find(e=>e.id===id);}
+function addText(){const el={id:uid(),type:'text',x:80,y:80,w:400,h:60,text:'Новый текст',style:{color:'#222',fontSize:'28px',fontFamily:'Segoe UI'}};getCurrentElements().push(el);renderSlide();selectElement(el.id);pushHistory();}
+function addTitle(){const el={id:uid(),type:'title',x:80,y:60,w:600,h:80,text:'Заголовок',style:{color:'#222',fontSize:'44px',fontWeight:'700',fontFamily:'Segoe UI'}};getCurrentElements().push(el);renderSlide();selectElement(el.id);pushHistory();}
+function addRect(){const el={id:uid(),type:'shape',shapeKind:'rect',x:150,y:150,w:250,h:180,style:{backgroundColor:'#89b4fa'}};getCurrentElements().push(el);renderSlide();selectElement(el.id);pushHistory();}
+function addCircle(){const el={id:uid(),type:'shape',shapeKind:'circle',x:150,y:150,w:200,h:200,style:{backgroundColor:'#f5c2e7'}};getCurrentElements().push(el);renderSlide();selectElement(el.id);pushHistory();}
+function deleteSelected(){if(!selectedEl){showToast('Не выбран элемент');return;}const a=getCurrentElements();const i=a.findIndex(e=>e.id===selectedEl);if(i>=0)a.splice(i,1);selectedEl=null;renderSlide();pushHistory();}
+function duplicateSelected(){if(!selectedEl){showToast('Не выбран элемент');return;}const el=findEl(selectedEl);if(!el)return;const c=JSON.parse(JSON.stringify(el));c.id=uid();c.x+=20;c.y+=20;getCurrentElements().push(c);renderSlide();selectElement(c.id);pushHistory();}
+function bringForward(){if(!selectedEl)return;const a=getCurrentElements();const i=a.findIndex(e=>e.id===selectedEl);if(i<a.length-1){[a[i],a[i+1]]=[a[i+1],a[i]];renderSlide();selectElement(selectedEl);pushHistory();}}
+function sendBackward(){if(!selectedEl)return;const a=getCurrentElements();const i=a.findIndex(e=>e.id===selectedEl);if(i>0){[a[i],a[i-1]]=[a[i-1],a[i]];renderSlide();selectElement(selectedEl);pushHistory();}}
+function selectElement(id){
+  selectedEl=id;
+  document.querySelectorAll('.element').forEach(d=>{d.classList.toggle('selected',d.dataset.id===id);const h=d.querySelector('.handle');if(h)h.remove();});
+  const el=findEl(id);if(!el)return;
+  const div=slideEl.querySelector(`[data-id="${id}"]`);if(!div)return;
+  div.classList.add('selected');
+  attachHandle(div,el);
+  updateToolbar(el);
+  document.getElementById('statusText').textContent='Выбрано: '+el.type;
+}
+function attachHandle(div,el){
+  const h=document.createElement('div');h.className='handle br';h.setAttribute('contenteditable','false');
+  h.addEventListener('mousedown',e=>startResize(e,el,div));
+  h.addEventListener('touchstart',e=>{
+    if(e.touches.length!==1)return;e.preventDefault();e.stopPropagation();
+    const t0=e.touches[0],sx=t0.clientX,sy=t0.clientY,ow=el.w,oh=el.h,scale=getScale();
+    function mv(ev){if(ev.touches.length!==1)return;ev.preventDefault();const t=ev.touches[0];el.w=Math.max(30,Math.min(960-el.x,ow+(t.clientX-sx)/scale));el.h=Math.max(20,Math.min(540-el.y,oh+(t.clientY-sy)/scale));div.style.width=el.w+'px';div.style.height=el.h+'px';}
+    function end(){document.removeEventListener('touchmove',mv);document.removeEventListener('touchend',end);renderSlidesList();pushHistory();}
+    document.addEventListener('touchmove',mv,{passive:false});
+    document.addEventListener('touchend',end);
+  },{passive:false});
+  div.appendChild(h);
+}
+function updateToolbar(el){
+  const s=el.style||{};
+  const set=(id,v)=>{const e=document.getElementById(id);if(e&&v!==undefined)e.value=v;};
+  if(s.fontFamily){set('fontFamily',s.fontFamily);set('mFontFamily',s.fontFamily);}
+  if(s.fontSize){set('fontSize',parseInt(s.fontSize));set('mFontSize',parseInt(s.fontSize));}
+  if(s.color){set('fgColor',toHex(s.color));set('mFgColor',toHex(s.color));}
+  if(s.backgroundColor){set('bgColor',toHex(s.backgroundColor));set('mBgColor',toHex(s.backgroundColor));}
+  const b=document.getElementById('mBold'),i=document.getElementById('mItalic'),u=document.getElementById('mUnderline');
+  if(b)b.classList.toggle('active',s.fontWeight==='bold');
+  if(i)i.classList.toggle('active',s.fontStyle==='italic');
+  if(u)u.classList.toggle('active',s.textDecoration==='underline');
+}
+function deselectIfBg(e){if(e.target===slideEl){selectedEl=null;document.querySelectorAll('.element').forEach(d=>{d.classList.remove('selected');const h=d.querySelector('.handle');if(h)h.remove();});document.getElementById('statusText').textContent='Готово';}}
+function toHex(c){if(!c)return '#000000';if(c.startsWith('#'))return c.length===7?c:'#000000';const m=c.match(/\d+/g);if(!m)return '#000000';return '#'+m.slice(0,3).map(n=>(+n).toString(16).padStart(2,'0')).join('');}
+function getScale(){const r=slideEl.getBoundingClientRect();return r.width/960;}
+function applyStyle(prop,val){if(!selectedEl){showToast('Сначала выберите элемент');return;}const el=findEl(selectedEl);if(!el)return;el.style[prop]=val;const d=slideEl.querySelector(`[data-id="${selectedEl}"]`);if(d)d.style[prop]=val;renderSlidesList();pushHistory();}
+function toggleStyle(prop,val){if(!selectedEl){showToast('Сначала выберите элемент');return;}const el=findEl(selectedEl);if(!el)return;el.style[prop]=(el.style[prop]===val)?'':val;const d=slideEl.querySelector(`[data-id="${selectedEl}"]`);if(d)d.style[prop]=el.style[prop];updateToolbar(el);renderSlidesList();pushHistory();}
+function setSlideBg(color){slides[currentSlide].bg=color;slideEl.style.background=color;const st=document.getElementById('slideBgStrip');if(st)st.style.background=color;const sb=document.getElementById('slideBg'),mb=document.getElementById('mSlideBg');if(sb)sb.value=color;if(mb)mb.value=color;renderSlidesList();pushHistory();}
+function applySlidePreset(c){setSlideBg(c);}
+function openMobileSheet(){closeMobileThemes();document.getElementById('mobileSheet').classList.add('open');document.getElementById('mobileBackdrop').classList.add('open');}
+function closeMobileSheet(){document.getElementById('mobileSheet').classList.remove('open');document.getElementById('mobileBackdrop').classList.remove('open');}
+function openMobileThemes(){closeMobileSheet();document.getElementById('mobileThemesSheet').classList.add('open');document.getElementById('mobileThemesBackdrop').classList.add('open');}
+function closeMobileThemes(){document.getElementById('mobileThemesSheet').classList.remove('open');document.getElementById('mobileThemesBackdrop').classList.remove('open');}
+function toggleMobileMenu(e){e.stopPropagation();const m=document.getElementById('mobileMenu');const w=m.classList.contains('open');closeAllMenus();if(!w)m.classList.add('open');}
+function toggleFileMenu(e){e.stopPropagation();const m=document.getElementById('fileMenu');const w=m.classList.contains('open');closeAllMenus();if(!w)m.classList.add('open');}
+document.addEventListener('click',e=>{
+  const fm=document.getElementById('fileMenu'),mm=document.getElementById('mobileMenu'),tm=document.getElementById('themesMenu');
+  if(fm&&!fm.contains(e.target)&&!e.target.closest('button[onclick*="toggleFileMenu"]'))fm.classList.remove('open');
+  if(mm&&!mm.contains(e.target)&&!e.target.closest('button[onclick*="toggleMobileMenu"]'))mm.classList.remove('open');
+  if(tm&&!tm.contains(e.target)&&!e.target.closest('button[onclick*="toggleThemesMenu"]'))tm.classList.remove('open');
+});
+let toastTimer=null;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200);}
+const STORAGE_KEY='nitpad_presentation';
+function serialize(){return JSON.stringify({version:1,slides,currentSlide,idCounter,savedAt:new Date().toISOString()},null,2);}
+function deserialize(text){try{const d=JSON.parse(text);if(!d.slides||!Array.isArray(d.slides))throw new Error('Неверный формат');slides=d.slides;currentSlide=Math.min(d.currentSlide||0,slides.length-1);idCounter=d.idCounter||1;selectedEl=null;history=[];historyIndex=-1;renderSlide();pushHistory();fitCanvas();return true;}catch(e){showToast('Ошибка: '+e.message);return false;}}
+function savePresentation(){try{localStorage.setItem(STORAGE_KEY,serialize());document.getElementById('saveIndicator').textContent='✓ Сохранено '+new Date().toLocaleTimeString('ru-RU');showToast('Сохранено');}catch(e){showToast('Не удалось сохранить');}}
+function saveAsPresentation(){const b=new Blob([serialize()],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='presentation_'+Date.now()+'.nitpad';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);showToast('Файл .nitpad скачан');}
+function openPresentation(){document.getElementById('fileInput').click();}
+document.getElementById('fileInput').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{if(deserialize(ev.target.result))showToast('Загружено: '+f.name);};r.readAsText(f);e.target.value='';});
+function newPresentation(){if(!confirm('Создать новую презентацию?'))return;slides=[createEmptySlide()];currentSlide=0;selectedEl=null;idCounter=1;history=[];historyIndex=-1;renderSlide();pushHistory();showToast('Создана');}
+function clearSaved(){if(!confirm('Удалить автосохранение?'))return;try{localStorage.removeItem(STORAGE_KEY);}catch(e){}document.getElementById('saveIndicator').textContent='';showToast('Очищено');}
+function exportHTML(){
+  const data=JSON.stringify({slides});
+  const html=`<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"><title>Nitpad банально</title>
+<style>html,body{margin:0;padding:0;background:#000;height:100%;overflow:hidden;font-family:'Segoe UI',sans-serif}.slide{width:100vw;height:56.25vw;max-height:100vh;max-width:177.78vh;background:#fff;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);overflow:hidden;display:none}.slide.active{display:block}.nav{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);padding:8px 16px;border-radius:24px;color:#fff;display:flex;gap:12px;align-items:center;font-size:14px}.nav button{background:rgba(255,255,255,0.15);color:#fff;border:none;width:34px;height:34px;border-radius:50%;font-size:14px;cursor:pointer}</style></head><body>
+<div id="root"></div>
+<div class="nav"><button onclick="prev()">◀</button><span id="c">1 / 1</span><button onclick="next()">▶</button></div>
+<script>const DATA=${data};let idx=0;function render(){const r=document.getElementById('root');r.innerHTML='';DATA.slides.forEach((s,i)=>{const d=document.createElement('div');d.className='slide'+(i===idx?' active':'');d.style.background=s.bg;const sc=Math.min(innerWidth/960,innerHeight/540);const inner=document.createElement('div');inner.style.width='960px';inner.style.height='540px';inner.style.position='absolute';inner.style.left='50%';inner.style.top='50%';inner.style.transform='translate(-50%,-50%) scale('+sc+')';inner.style.transformOrigin='center center';s.elements.forEach(el=>{const e=document.createElement('div');e.style.position='absolute';e.style.left=el.x+'px';e.style.top=el.y+'px';e.style.width=el.w+'px';e.style.height=el.h+'px';Object.assign(e.style,el.style);if(el.type==='shape'){e.style.borderRadius=el.shapeKind==='circle'?'50%':'6px';}else{e.textContent=el.text||'';e.style.whiteSpace='pre-wrap';e.style.wordWrap='break-word';e.style.padding='4px 6px';}inner.appendChild(e);});d.appendChild(inner);r.appendChild(d);});document.getElementById('c').textContent=(idx+1)+' / '+DATA.slides.length;}function next(){if(idx<DATA.slides.length-1){idx++;render();}}function prev(){if(idx>0){idx--;render();}}addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' ')next();if(e.key==='ArrowLeft')prev();});addEventListener('resize',render);render();<\/script></body></html>`;
+  const b=new Blob([html],{type:'text/html'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='presentation_'+Date.now()+'.html';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);showToast('Экспортировано в HTML');
+}
+document.addEventListener('keydown',e=>{
+  const editing=document.activeElement&&document.activeElement.isContentEditable;
+  const tag=document.activeElement?document.activeElement.tagName:'';
+  const inField=editing||tag==='INPUT'||tag==='SELECT';
+  if(e.ctrlKey&&e.key==='s'){e.preventDefault();savePresentation();return;}
+  if(e.ctrlKey&&e.key==='o'){e.preventDefault();openPresentation();return;}
+  if(e.ctrlKey&&e.key==='n'){e.preventDefault();newPresentation();return;}
+  if(e.ctrlKey&&e.key==='z'&&!e.shiftKey){e.preventDefault();undo();return;}
+  if(e.ctrlKey&&(e.key==='y'||(e.key==='z'&&e.shiftKey))){e.preventDefault();redo();return;}
+  if(document.getElementById('presentOverlay').classList.contains('active')){
+    if(e.key==='Escape')stopPresent();
+    if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();presentNext();}
+    if(e.key==='ArrowLeft'){e.preventDefault();presentPrev();}
+    return;
+  }
+  if(!inField&&!selectedEl){
+    if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();nextSlide();return;}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();prevSlide();return;}
+  }
+  if(inField)return;
+  if((e.key==='Delete'||e.key==='Backspace')&&selectedEl)deleteSelected();
+  if(e.ctrlKey&&e.key==='d'&&selectedEl){e.preventDefault();duplicateSelected();}
+  if(selectedEl&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){
+    e.preventDefault();
+    const el=findEl(selectedEl);const step=e.shiftKey?10:1;
+    if(e.key==='ArrowUp')el.y-=step;if(e.key==='ArrowDown')el.y+=step;
+    if(e.key==='ArrowLeft')el.x-=step;if(e.key==='ArrowRight')el.x+=step;
+    el.y=Math.max(0,Math.min(540-el.h,el.y));el.x=Math.max(0,Math.min(960-el.w,el.x));
+    const d=slideEl.querySelector(`[data-id="${selectedEl}"]`);if(d){d.style.left=el.x+'px';d.style.top=el.y+'px';}
+  }
+});
+document.addEventListener('keyup',e=>{if(selectedEl&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))pushHistory();});
+let presentIndex=0;
+const overlay=document.getElementById('presentOverlay');
+const presentClone=document.getElementById('presentClone');
+function startPresent(){presentIndex=0;overlay.classList.add('active');showPresentSlide();}
+function startPresentFromCurrent(){presentIndex=currentSlide;overlay.classList.add('active');showPresentSlide();}
+function stopPresent(){overlay.classList.remove('active');}
+function showPresentSlide(){
+  presentClone.innerHTML='';
+  const s=slides[presentIndex];
+  presentClone.style.background=s.bg;
+  const inner=document.createElement('div');
+  inner.style.width='960px';inner.style.height='540px';inner.style.position='absolute';inner.style.transformOrigin='center center';inner.style.background=s.bg;
+  const ow=presentClone.clientWidth||window.innerWidth,oh=presentClone.clientHeight||window.innerHeight;
+  const sc=Math.min(ow/960,oh/540);
+  inner.style.left='50%';inner.style.top='50%';inner.style.transform=`translate(-50%,-50%) scale(${sc})`;
+  s.elements.forEach(el=>{const d=document.createElement('div');d.style.position='absolute';d.style.left=el.x+'px';d.style.top=el.y+'px';d.style.width=el.w+'px';d.style.height=el.h+'px';Object.assign(d.style,el.style);if(el.type==='shape')d.style.borderRadius=el.shapeKind==='circle'?'50%':'6px';else{d.textContent=el.text||'';d.style.whiteSpace='pre-wrap';d.style.wordWrap='break-word';d.style.padding='4px 6px';}inner.appendChild(d);});
+  presentClone.appendChild(inner);
+  document.getElementById('presentCounter').textContent=`${presentIndex+1} / ${slides.length}`;
+  updateNavButtons();
+}
+function presentNext(){if(presentIndex<slides.length-1){presentIndex++;showPresentSlide();}}
+function presentPrev(){if(presentIndex>0){presentIndex--;showPresentSlide();}}
+overlay.addEventListener('click',e=>{if(e.target===overlay||e.target===presentClone)presentNext();});
+function init(){
+  loadSavedTheme();
+  renderThemePickers();
+  try{const s=localStorage.getItem(STORAGE_KEY);if(s){const ok=deserialize(s);if(ok){const si=document.getElementById('saveIndicator');if(si)si.textContent='✓ Восстановлено';}}}catch(e){console.warn(e);}
+  if(historyIndex===-1)pushHistory();
+  let sm=null;try{sm=localStorage.getItem('nitpad_mode');}catch(e){}
+  if(sm==='desktop'||sm==='mobile'){welcomeEl.classList.add('hide');switchMode(sm);}
+  else{document.body.className='desktop';desktopCanvasArea.appendChild(slideEl);renderSlide();}
+  setTimeout(fitCanvas,100);setTimeout(fitCanvas,400);
+}
+setInterval(()=>{try{localStorage.setItem(STORAGE_KEY,serialize());const si=document.getElementById('saveIndicator');if(si)si.textContent='✓ Автосохранено '+new Date().toLocaleTimeString('ru-RU');}catch(e){}},20000);
+init();
+</script>
+</body>
+</html>
